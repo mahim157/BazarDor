@@ -1,0 +1,56 @@
+[
+  {
+    "id": "1",
+    "slug": "onion",
+    "name": "পেঁয়াজ",
+    "emoji": "🧅",
+    "unit": "প্রতি কেজি",
+    "price": 54,
+    "changePercentage": 52.0
+  },
+  {
+    "id": "2",
+    "slug": "ginger",
+    "name": "আদা",
+    "emoji": "🫚",
+    "unit": "প্রতি কেজি",
+    "price": 85,
+    "changePercentage": 9.0
+  },
+  {
+    "id": "3",
+    "slug": "eggplant",
+    "name": "বেগুন",
+    "emoji": "🍆",
+    "unit": "প্রতি কেজি",
+    "price": 44,
+    "changePercentage": 4.8
+  },
+  {
+    "id": "4",
+    "slug": "green-chili",
+    "name": "কাঁচামরিচ",
+    "emoji": "🌶️",
+    "unit": "প্রতি কেজি",
+    "price": 92,
+    "changePercentage": -12.8
+  },
+  {
+    "id": "5",
+    "slug": "garlic",
+    "name": "রসুন",
+    "emoji": "🧄",
+    "unit": "প্রতি কেজি",
+    "price": 125,
+    "changePercentage": -7.4
+  },
+  {
+    "id": "6",
+    "slug": "potato",
+    "name": "আলু",
+    "emoji": "🥔",
+    "unit": "প্রতি কেজি",
+    "price": 30,
+    "changePercentage": -6.2
+  }
+]
