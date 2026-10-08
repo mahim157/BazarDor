@@ -1,4 +1,5 @@
-import React from 'react';
+import React from "react";
+import Link from "next/link";
 
 export interface Market {
   market: string;
@@ -8,70 +9,109 @@ export interface Market {
 }
 
 export interface Product {
-  id: number;
+  id: number | string;
   slug: string;
   nameBn: string;
   category: string;
-  categoryNameBn: string;
-  categoryIcon: string;
+  categoryNameBn?: string;
+  categoryIcon?: string;
   unit: string;
   image: string;
   today: number;
-  yesterday: number;
-  lastWeek: number;
-  lastMonth: number;
-  change: {
-    dir: 'up' | 'down' | 'flat';
+  yesterday?: number;
+  lastWeek?: number;
+  lastMonth?: number;
+
+  change?: {
+    dir: "up" | "down" | "flat";
     pct: number;
   };
-  markets: Market[];
+
+  markets?: Market[];
 }
 
-export default function ProductCard({ product }: { product: Product }) {
-  const isUp = product.change.dir === 'up';
-  const isDown = product.change.dir === 'down';
+export default function ProductCard({
+  product,
+}: {
+  product: Product;
+}) {
+  const direction = product?.change?.dir ?? "flat";
+  const percentage = product?.change?.pct ?? 0;
 
-  const toBengali = (num: number | string) =>
-    num.toString().replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[parseInt(d)]);
+  const toBengali = (num?: number | string) => {
+    if (num === undefined || num === null) return "০";
+
+    return num
+      .toString()
+      .replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[parseInt(d)]);
+  };
+
+  const getUnit = (unit: string) => {
+    if (!unit) return "একক";
+
+    if (unit.startsWith("প্রতি")) {
+      return unit;
+    }
+
+    return `প্রতি ${unit}`;
+  };
 
   return (
-    <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs hover:shadow-md transition-all flex justify-between items-start group">
-      <div className="space-y-3">
+    <Link
+      href={`/product/${product.slug}`}
+      className="block h-full"
+    >
+      <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between h-full hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+        
+        {/* Product Info */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-amber-50/60 rounded-xl flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
-            {product.categoryIcon || product.image || '🍚'}
+          <div className="w-12 h-12 bg-slate-50 text-2xl rounded-2xl flex items-center justify-center shrink-0">
+            {product.image || product.categoryIcon || "📦"}
           </div>
-          <div>
-            <h3 className="font-bold text-slate-800 text-base leading-tight">
+
+          <div className="min-w-0">
+            <h3 className="font-bold text-slate-800 text-sm truncate">
               {product.nameBn}
             </h3>
-            <p className="text-xs text-slate-400 font-medium">
-              {product.categoryNameBn} • প্রতি {product.unit === 'kg' ? 'কেজি' : product.unit}
+
+            <p className="text-xs text-slate-400 font-medium mt-0.5">
+              {getUnit(product.unit)}
             </p>
           </div>
         </div>
 
-        <div>
-          <span className="text-[11px] text-slate-400 block">আজকের দাম</span>
-          <span className="font-black text-slate-900 text-lg">
-            {toBengali(product.today)} টাকা
-          </span>
+        {/* Price */}
+        <div className="flex justify-between items-end pt-4 border-t border-slate-50 mt-4">
+          <div>
+            <span className="text-[10px] text-slate-400 block font-medium">
+              আজকের দাম
+            </span>
+
+            <span className="text-lg font-black text-slate-900">
+              ৳{toBengali(product.today)}
+            </span>
+          </div>
+
+          {/* Change */}
+          <div
+            className={`text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 ${
+              direction === "up"
+                ? "bg-emerald-50 text-emerald-600"
+                : direction === "down"
+                ? "bg-rose-50 text-rose-600"
+                : "bg-slate-100 text-slate-500"
+            }`}
+          >
+            {direction === "up" && <span>▲</span>}
+            {direction === "down" && <span>▼</span>}
+            {direction === "flat" && <span>—</span>}
+
+            <span>
+              {toBengali(percentage)}%
+            </span>
+          </div>
         </div>
       </div>
-
-      <div className="self-end">
-        <span
-          className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg ${
-            isUp
-              ? 'bg-rose-50 text-rose-600'
-              : isDown
-              ? 'bg-emerald-50 text-emerald-600'
-              : 'bg-slate-100 text-slate-500'
-          }`}
-        >
-          {isUp ? '▲' : isDown ? '▼' : '—'} {toBengali(Math.abs(product.change.pct).toFixed(1))}%
-        </span>
-      </div>
-    </div>
+    </Link>
   );
 }
