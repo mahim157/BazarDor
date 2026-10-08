@@ -11,30 +11,75 @@ export interface Category {
 }
 
 const categories: Category[] = [
-  { id: "chal", slug: "chal", nameBn: "চাল", icon: "🍚" },
-  { id: "dal", slug: "dal", nameBn: "ডাল", icon: "🫘" },
-  { id: "tel", slug: "tel", nameBn: "তেল", icon: "🛢️" },
-  { id: "sobji", slug: "sobji", nameBn: "সবজি", icon: "🥬" },
-  { id: "mach", slug: "mach", nameBn: "মাছ", icon: "🐟" },
-  { id: "mangsho", slug: "mangsho", nameBn: "মাংস", icon: "🍗" },
-  { id: "dim-dui", slug: "dim-dui", nameBn: "ডিম-দুধ", icon: "🥛" },
-  { id: "mosla", slug: "mosla", nameBn: "মসলা", icon: "🌶️" },
+  {
+    id: "chal",
+    slug: "chal",
+    nameBn: "চাল",
+    icon: "🍚",
+  },
+  {
+    id: "dal",
+    slug: "dal",
+    nameBn: "ডাল",
+    icon: "🫘",
+  },
+  {
+    id: "tel",
+    slug: "tel",
+    nameBn: "তেল",
+    icon: "🛢️",
+  },
+  {
+    id: "sobji",
+    slug: "sobji",
+    nameBn: "সবজি",
+    icon: "🥬",
+  },
+  {
+    id: "mach",
+    slug: "mach",
+    nameBn: "মাছ",
+    icon: "🐟",
+  },
+  {
+    id: "mangsho",
+    slug: "mangsho",
+    nameBn: "মাংস",
+    icon: "🍗",
+  },
+  {
+    id: "dim-dui",
+    slug: "dim-dui",
+    nameBn: "ডিম-দুধ",
+    icon: "🥛",
+  },
+  {
+    id: "mosla",
+    slug: "mosla",
+    nameBn: "মসলা",
+    icon: "🌶️",
+  },
 ];
 
-interface Props {
+interface CategoryFilterProps {
   selectedCategory: string | null;
-  onSelectCategory: (slug: string | null) => void;
+  onSelectCategory?: (slug: string | null) => void;
 }
 
 export default function CategoryFilter({
   selectedCategory,
   onSelectCategory,
-}: Props) {
+}: CategoryFilterProps) {
   const router = useRouter();
 
   const handleCategoryClick = (slug: string) => {
-    onSelectCategory(slug);
+    onSelectCategory?.(slug);
     router.push(`/category/${slug}`);
+  };
+
+  const handleAllCategoryClick = () => {
+    onSelectCategory?.(null);
+    router.push("/");
   };
 
   return (
@@ -45,10 +90,7 @@ export default function CategoryFilter({
           {/* সব ক্যাটাগরি */}
           <button
             type="button"
-            onClick={() => {
-              onSelectCategory(null);
-              router.push("/");
-            }}
+            onClick={handleAllCategoryClick}
             className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
               selectedCategory === null
                 ? "bg-emerald-600 text-white shadow-sm"
@@ -59,22 +101,23 @@ export default function CategoryFilter({
             <span>সব ক্যাটাগরি</span>
           </button>
 
-          {categories.map((cat) => {
-            const isActive = selectedCategory === cat.slug;
+          {/* Category buttons */}
+          {categories.map((category) => {
+            const isActive = selectedCategory === category.slug;
 
             return (
               <button
-                key={cat.id}
+                key={category.id}
                 type="button"
-                onClick={() => handleCategoryClick(cat.slug)}
+                onClick={() => handleCategoryClick(category.slug)}
                 className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
                   isActive
                     ? "bg-emerald-600 text-white shadow-sm"
                     : "bg-white text-slate-600 hover:bg-emerald-50 border border-slate-200"
                 }`}
               >
-                <span>{cat.icon}</span>
-                <span>{cat.nameBn}</span>
+                <span>{category.icon}</span>
+                <span>{category.nameBn}</span>
               </button>
             );
           })}
