@@ -47,42 +47,81 @@ export default function CategoryPage({
       setError(false);
 
       try {
+        const categoryUrl = `${API_BASE}/categories/${categoryId}`;
+        const productsUrl = `${API_BASE}/products?category=${categoryId}`;
+        const allProductsUrl = `${API_BASE}/products`;
+
         const [categoryRes, productsRes, allProductsRes] =
           await Promise.all([
-            fetch(`${API_BASE}/categories/${categoryId}`),
-            fetch(`${API_BASE}/products?category=${categoryId}`),
-            fetch(`${API_BASE}/products`),
+            fetch(categoryUrl, { cache: "no-store" }),
+            fetch(productsUrl, { cache: "no-store" }),
+            fetch(allProductsUrl, { cache: "no-store" }),
           ]);
 
-        if (
-          !categoryRes.ok ||
-          !productsRes.ok ||
-          !allProductsRes.ok
-        ) {
-          throw new Error("Failed to fetch category data");
+        console.log("Category status:", categoryRes.status);
+        console.log("Products status:", productsRes.status);
+        console.log("All products status:", allProductsRes.status);
+
+        if (!categoryRes.ok) {
+          throw new Error(
+            `Category API failed: ${categoryRes.status}`
+          );
         }
 
-        const categoryData = await categoryRes.json();
-        const productsData = await productsRes.json();
-        const allProductsData = await allProductsRes.json();
+        if (!productsRes.ok) {
+          throw new Error(
+            `Products API failed: ${productsRes.status}`
+          );
+        }
+
+        if (!allProductsRes.ok) {
+          throw new Error(
+            `All Products API failed: ${allProductsRes.status}`
+          );
+        }
+
+        const categoryJson = await categoryRes.json();
+        const productsJson = await productsRes.json();
+        const allProductsJson = await allProductsRes.json();
+
+        console.log("Category API:", categoryJson);
+        console.log("Category Products API:", productsJson);
+        console.log("All Products API:", allProductsJson);
 
         if (!isMounted) return;
 
-        // Category API returns one category object
-        const category: CategoryInfo = categoryData;
+        // Category response normalize
+        const category: CategoryInfo =
+          categoryJson?.category ??
+          categoryJson?.data ??
+          categoryJson;
 
-        // Products API returns an array
-        const products: Product[] = Array.isArray(productsData)
-          ? productsData
-          : [];
+        // Products response normalize
+        const products: Product[] =
+          Array.isArray(productsJson)
+            ? productsJson
+            : Array.isArray(productsJson?.products)
+            ? productsJson.products
+            : Array.isArray(productsJson?.data)
+            ? productsJson.data
+            : [];
 
-        // All products API returns an array
-        const allProducts: Product[] = Array.isArray(allProductsData)
-          ? allProductsData
-          : [];
+        // All products response normalize
+        const allProducts: Product[] =
+          Array.isArray(allProductsJson)
+            ? allProductsJson
+            : Array.isArray(allProductsJson?.products)
+            ? allProductsJson.products
+            : Array.isArray(allProductsJson?.data)
+            ? allProductsJson.data
+            : [];
+
+        console.log("Normalized category:", category);
+        console.log("Normalized products:", products);
+        console.log("Normalized all products:", allProducts);
 
         if (!category || !category.id) {
-          throw new Error("Invalid category data");
+          throw new Error("Invalid category response");
         }
 
         setData({
@@ -92,8 +131,8 @@ export default function CategoryPage({
         });
 
         setLoading(false);
-      } catch (err) {
-        console.error("Category Fetch Error:", err);
+      } catch (error) {
+        console.error("Category Fetch Error:", error);
 
         if (isMounted) {
           setError(true);
@@ -111,25 +150,20 @@ export default function CategoryPage({
   }, [categoryId]);
 
   // Bengali number converter
-  const toBengali = (num: number | string) => {
-    return num
-      .toString()
-      .replace(/\d/g, (digit) => "০১২৩৪৫৬৭৮৯"[parseInt(digit)]);
-  };
+  function toBengali(num: number | string) {
+    return String(num).replace(
+      /\d/g,
+      (digit) => "০১২৩৪৫৬৭৮৯"[Number(digit)]
+    );
+  }
 
   // Loading state
   if (loading) {
     return <CategorySkeleton />;
   }
 
-  // Error / empty state
-  if (
-    error ||
-    !data ||
-    !data.category ||
-    !data.products ||
-    data.products.length === 0
-  ) {
+  // API error / invalid category
+  if (error || !data || !data.category) {
     return (
       <div className="min-h-screen bg-[#F4F6F3] text-slate-800 flex flex-col">
         <div className="flex-1">
@@ -147,18 +181,16 @@ export default function CategoryPage({
           />
 
           <main className="max-w-md mx-auto px-4 py-20 text-center">
-            <div className="w-16 h-16 bg-slate-200/80 rounded-full flex items-center justify-center text-3xl mx-auto mb-5">
-              🔍
+            <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center text-3xl mx-auto">
+              ⚠️
             </div>
 
-            <h1 className="text-xl font-bold text-slate-900">
-              {data?.category
-                ? "এই ক্যাটাগরিতে কোনো পণ্য পাওয়া যায়নি"
-                : "ক্যাটাগরিটি পাওয়া যায়নি"}
+            <h1 className="text-xl font-bold text-slate-900 mt-5">
+              ক্যাটাগরি লোড করা যায়নি
             </h1>
 
             <p className="text-sm text-slate-500 mt-3">
-              এই ক্যাটাগরির পণ্যের তথ্য এই মুহূর্তে পাওয়া যাচ্ছে না।
+              API থেকে ক্যাটাগরির তথ্য পাওয়া যাচ্ছে না।
             </p>
 
             <Link
@@ -208,7 +240,7 @@ export default function CategoryPage({
 
         {/* Category Navigation */}
         <CategoryFilter
-          selectedCategory={category.id}
+          selectedCategory={category.slug}
           onSelectCategory={(newCategory) => {
             if (newCategory) {
               router.push(`/category/${newCategory}`);
@@ -294,16 +326,31 @@ export default function CategoryPage({
           </section>
 
           {/* Product Grid */}
-          <section>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {sortedProducts.map((product, index) => (
-                <ProductCard
-                  key={product.id || index}
-                  product={product}
-                />
-              ))}
-            </div>
-          </section>
+          {sortedProducts.length === 0 ? (
+            <section className="bg-white rounded-2xl p-10 text-center border border-slate-100">
+              <div className="text-4xl">📦</div>
+
+              <h2 className="font-bold text-slate-800 mt-3">
+                এই ক্যাটাগরিতে কোনো পণ্য নেই
+              </h2>
+
+              <p className="text-sm text-slate-400 mt-2">
+                বর্তমানে এই ক্যাটাগরির পণ্যের তথ্য পাওয়া যাচ্ছে না।
+              </p>
+            </section>
+          ) : (
+            <section>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {sortedProducts.map((product, index) => (
+                  <ProductCard
+                    key={product.id ?? index}
+                    product={product}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
         </main>
       </div>
 
